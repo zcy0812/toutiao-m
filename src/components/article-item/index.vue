@@ -1,6 +1,25 @@
 <template>
-  <van-cell class="article-item">
-    <div slot="title" class="title van-multi-ellipsis--l2">{{ article.title }}</div>
+  <!-- 
+  cell单元格的 to 属性和 VueRouter 中的 RouterLink 组件的 to 属性 用法是一样的
+  用法参考链接：https://router.vuejs.org/zh/api/#to
+  :to="'/article/' + article.art_id"
+  :to="`/article/${article.art_id}`
+ -->
+  <van-cell
+    class="article-item"
+    :to="{
+      //根据路由名称进行跳转
+      name: 'article',
+      // 传递路由动态参数
+      params: {
+        // 属性名：路由路径中设置的动态参数名称
+        articleId: article.art_id
+      }
+    }"
+  >
+    <div slot="title" class="title van-multi-ellipsis--l2">
+      {{ article.title }}
+    </div>
     <div slot="label">
       <div v-if="article.cover.type === 3" class="cover-wrap">
         <div
@@ -86,10 +105,8 @@ export default {
       .cover-item-img {
         width: 100%;
         height: 146px;
-
       }
     }
-    
   }
 }
 </style>
