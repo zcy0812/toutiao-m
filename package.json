@@ -15,6 +15,7 @@
     "dayjs": "^1.9.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.20",
+    "socket.io-client": "^3.0.4",
     "vant": "^2.11.1",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
