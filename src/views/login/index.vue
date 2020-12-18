@@ -126,6 +126,9 @@ export default {
         this.$store.commit('setUser', data.data)
         this.$toast.success('登录成功')
 
+        // 清除layout 的缓存 让它重新渲染
+        this.$store.commit('removeCachePage', 'LayoutIndex')
+
         // 登录成功，跳转回原来页面
         // back 的方式不严谨，后面讲功能优化的时候再说
         this.$router.back()

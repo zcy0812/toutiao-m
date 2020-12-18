@@ -1,5 +1,5 @@
 <template>
-  <div class="article-list">
+  <div class="article-list" ref="article-list">
     <!-- 
     List 列表组件：瀑布流滚动加载，用于展示长列表。
 
@@ -53,6 +53,7 @@
 <script>
 import { getArticles } from '@/api/article'
 import ArticleItem from '@/components/article-item'
+import { debounce } from 'lodash'
 
 export default {
   name: 'ArticleList',
@@ -80,13 +81,25 @@ export default {
       // 控制下拉刷新的状态
       isreFreshLoading: false,
       // 下拉刷新成功提示文本
-      refreshSuccessText: '刷新成功'
+      refreshSuccessText: '刷新成功',
+      // 列表滚动到顶部的距离
+      scrollTop: 0
     }
   },
   computed: {},
   watch: {},
   created() {},
-  mounted() {},
+  mounted() {
+    const articleList = this.$refs['article-list']
+    articleList.onscroll = debounce(() => {
+      // console.log('onscroll')
+      this.scrollTop = articleList.scrollTop
+    }, 60)
+  },
+  activated() {
+    // 把记录的到顶部的距离重新设置回去
+    this.$refs['article-list'].scrollTop = this.scrollTop
+  },
   methods: {
     //   初始化或滚动到底部的时候会触发调用 onLoad
     async onLoad() {

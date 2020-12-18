@@ -1,7 +1,9 @@
 <template>
   <div class="layout-container">
-    <!-- 子路由出口 -->
-    <router-view></router-view>
+    <!-- layout的子路由出口 或者说是二级路由 -->
+    <keep-alive>
+      <router-view />
+    </keep-alive>
 
     <!-- 底部导航栏 -->
     <!--route开启路由模式  -->
@@ -20,7 +22,7 @@
       </van-tabbar-item>
       <van-tabbar-item to="/my">
         <i slot="icon" class="toutiao toutiao-wode"></i>
-        <span class="text">{{ $store.state.user ?  '我的' : '未登录' }}</span>
+        <span class="text">{{ $store.state.user ? '我的' : '未登录' }}</span>
       </van-tabbar-item>
     </van-tabbar>
   </div>
@@ -32,13 +34,14 @@ export default {
   components: {},
   props: {},
   data() {
-    return {
-    }
+    return {}
   },
   computed: {},
   watch: {},
   created() {},
-  mounted() {},
+  mounted() {
+    this.$store.commit('addCachePage', 'LayoutIndex')
+  },
   methods: {}
 }
 </script>
