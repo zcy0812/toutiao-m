@@ -3,6 +3,12 @@
 import axios from 'axios'
 import store from '@/store'
 import JSONBig from 'json-bigint'
+import { Toast } from 'vant'
+import router from '@/router/'
+
+const refreshTokenReq = axios.create({
+  baseURL: 'http://ttapi.research.itcast.cn/'
+})
 
 // 举例 JSONBig 的用法
 // const jsonStr = '{ "art_id": 1245953273786007552}'
@@ -20,12 +26,13 @@ import JSONBig from 'json-bigint'
 // console.log(JSONBig.stringify(JSONBig.parse(jsonStr))) // 数字 1245953273786007552
 
 const request = axios.create({
-    // 接口的基准路径
-    baseURL: 'http://ttapi.research.itcast.cn/',
+  // 接口的基准路径
+  baseURL: 'http://ttapi.research.itcast.cn/',
 
-    // 自定义后端返回的原始数据
-    // data: 后端返回的原始数据，说白了就是 JSON 格式的字符串
-    transformResponse: [function (data) {
+  // 自定义后端返回的原始数据
+  // data: 后端返回的原始数据，说白了就是 JSON 格式的字符串
+  transformResponse: [
+    function(data) {
       try {
         return JSONBig.parse(data)
       } catch (err) {
@@ -34,27 +41,101 @@ const request = axios.create({
 
       // axios 默认会在内部这样处理后端返回的数据
       // return JSON.parse(data)
-    }]
+    }
+  ]
 })
 
+// 参考文档：https://github.com/axios/axios
 // 请求拦截器
 // Add a request interceptor
-request.interceptors.request.use(function (config) {
+request.interceptors.request.use(
+  function(config) {
     // 请求发起会经过这里、
     // config：本次请求的配置对象
     // console.log(config)
     const { user } = store.state
     if (user && user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`
+      config.headers.Authorization = `Bearer ${user.token}`
     }
     // console.log(config)
 
     // 注意：这里务必要返回config配置对象 否则请求就停在这里出不去了
     return config
-  }, function (error) {
+  },
+  function(error) {
     // 如果请求出错了 (还没有发出去) 会进入这里
     return Promise.reject(error)
-  })
+  }
+)
+
 // 响应拦截器
+// Add a response interceptor
+request.interceptors.response.use(
+  function(response) {
+    // 响应成功进入这里
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
+    return response
+  },
+  async function(error) {
+    // 请求响应失败进入这里
+    // 超过 2xx 的状态码都会进入这里
+
+    // console.dir(error)
+    const status = error.response.status
+
+    if (status === 400) {
+      // 客户端请求参数错误
+      Toast.fail('客户端请求参数异常')
+    } else if (status === 401) {
+      // token 无效
+      // 如果没有 user 或者 user.token 直接去登录
+      const { user } = store.state
+      if (!user || !user.token) {
+        // 直接跳转到登录页
+        return redirectLogin()
+      }
+
+      // 使用 refresh_token 请求获取新的 token
+      try {
+        const { data } = await refreshTokenReq({
+          method: 'PUT',
+          url: '/app/v1_0/authorizations',
+          headers: {
+            Authorization: `Bearer ${user.refresh_token}`
+          }
+        })
+        // 拿到新的 token 之后把它更新到容器中
+        // console.log(data)
+        user.token = data.data.token
+        store.commit('setUser', user)
+
+        // 把失败的请求重新发出去
+        // error.config 是本次请求的相关配置信息对象
+        // 这里使用 request 发请求 它会走自己的拦截器
+        // 它的请求拦截器中通过 store 容器访问 token 数据
+        return request(error.config)
+      } catch (err) {
+        // 刷新 token 都失败了 直接跳转登录页
+        redirectLogin()
+      }
+    } else if (status === 403) {
+      // 没有权限操作
+      Toast.fail('没有权限')
+    } else if (status === 404) {
+      Toast.fail('访问路径错误')
+    } else if (status >= 500) {
+      // 服务端异常
+      Toast.fail('服务端异常，请稍后重试')
+    }
+
+    // 抛出异常
+    return Promise.reject(error)
+  }
+)
+
+function redirectLogin() {
+  router.replace('/login')
+}
 
 export default request
