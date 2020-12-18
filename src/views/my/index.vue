@@ -5,12 +5,7 @@
       <!-- 基础信息 -->
       <div class="base-info">
         <div class="left">
-          <van-image
-            class="avater"
-            round
-            fit="cover"
-            :src="userInfo.photo"
-          />
+          <van-image class="avater" round fit="cover" :src="userInfo.photo" />
           <span class="name">{{ userInfo.name }}</span>
         </div>
         <div class="right">
@@ -40,9 +35,19 @@
 
     <!-- 未登录界面 -->
     <div v-else class="header not-login">
-      <div class="login-btn">
+      <div
+        class="login-btn"
+        @click="
+          $router.push({
+            name: 'login',
+            query: {
+              redirect: '/my'
+            }
+          })
+        "
+      >
         <img class="mobile-img" src="~@/assets/mobile.png" alt="" />
-        <span class="text" @click="$router.push('/login')">登录 / 注册</span>
+        <span class="text">登录 / 注册</span>
       </div>
     </div>
 
@@ -100,9 +105,10 @@ export default {
     onLogout() {
       // 1.退出提示
       // 在组件中需要使用 this.$dialog 来调用弹框提示
-      this.$dialog.confirm({
-        title: '确认退出吗?'
-      })
+      this.$dialog
+        .confirm({
+          title: '确认退出吗?'
+        })
         .then(() => {
           // on confirm
           // 2.确认退出：清除登录状态(vuex容器中的 user + 本地存储的 user)
